@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
 
                 FileOutputStream fos = null;
                 try {
-                    fos = new FileOutputStream("/sdcard/output/stirling/baseline_" + System.currentTimeMillis() + ".txt");
+                    fos = new FileOutputStream("/sdcard/output/stirling/thin_" + System.currentTimeMillis() + ".txt");
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
