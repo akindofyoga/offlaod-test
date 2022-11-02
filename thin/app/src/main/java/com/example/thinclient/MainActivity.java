@@ -1,5 +1,7 @@
 package com.example.thinclient;
 
+import static android.provider.Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -12,7 +14,9 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.RectF;
+import android.net.Uri;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
@@ -56,16 +60,26 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        String[] permissions = new String[] {
-                Manifest.permission.INTERNET, Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE};
-        for (String permission : permissions) {
-            if (ContextCompat.checkSelfPermission(this, permission) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(permissions, 0);
-                break;
+        // Request ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION on Vuzix Blade 2
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+                        Uri.parse("package:" + BuildConfig.APPLICATION_ID));
+                startActivity(intent);
             }
         }
+
+        // Permissions for ODG, Magicleap, and Google Glass
+//        String[] permissions = new String[] {
+//                Manifest.permission.INTERNET, Manifest.permission.READ_EXTERNAL_STORAGE,
+//                Manifest.permission.WRITE_EXTERNAL_STORAGE};
+//        for (String permission : permissions) {
+//            if (ContextCompat.checkSelfPermission(this, permission) !=
+//                    PackageManager.PERMISSION_GRANTED) {
+//                requestPermissions(permissions, 0);
+//                break;
+//            }
+//        }
 
         ExecutorService pool = Executors.newFixedThreadPool(2);
         pool.execute(() -> {
@@ -89,7 +103,7 @@ public class MainActivity extends AppCompatActivity {
             ServerComm serverComm = ServerComm.createServerComm(
                     consumer, "vm030.elijah.cs.cmu.edu", 9099, getApplication(), onDisconnect);
 
-            for (String odname : new String[] {/*"ed0.tflite",*/ "ed1.tflite", "ed2.tflite"}) {
+            for (String odname : new String[] {"ed0.tflite", "ed1.tflite", "ed2.tflite"}) {
                 running = true;
                 pool.execute(() -> {
                     File testImages = new File(Environment.getExternalStorageDirectory().getPath()
@@ -119,9 +133,9 @@ public class MainActivity extends AppCompatActivity {
 
                         // This check is necessary because baseOptionsBuilder.useGpu(); will not work on Google
                         // glass.
-                        //if ((new CompatibilityList()).isDelegateSupportedOnThisDevice()) {
+                        if ((new CompatibilityList()).isDelegateSupportedOnThisDevice()) {
                             baseOptionsBuilder.useGpu();
-                        //}
+                        }
 
                         optionsBuilder.setBaseOptions(baseOptionsBuilder.build());
 
@@ -197,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
                                         BatteryManager.BATTERY_PROPERTY_ENERGY_COUNTER);
                             }
 
-                            if (total == 1000) {
+                            if (total == 120) {
                                 try {
                                     fos.close();
                                 } catch (IOException e) {
